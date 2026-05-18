@@ -106,6 +106,8 @@ void LoginDialog::slot_readyData(unsigned int ip, const QByteArray& data)
                 env.insert("LIVE_TOKEN", token);
                 env.insert("LIVE_SERVER", m_serverIp);
                 env.insert("LIVE_USERID", QString::number(userId));
+                env.insert("LIVE_NAME", ui->le_name->text());
+                env.insert("LIVE_TEL", ui->le_tel->text());
                 proc.setProcessEnvironment(env);
                 proc.setProgram(appPath);
                 bool started = proc.startDetached();

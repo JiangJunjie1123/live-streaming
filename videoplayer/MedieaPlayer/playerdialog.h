@@ -29,6 +29,7 @@ public:
 
     void initNetwork(const QString& serverIp, const QString& token, int userId);
     void requestRoomList();
+    void setUserInfo(const QString& name, const QString& tel);
 
 private slots:
     void on_pb_start_clicked();
@@ -48,11 +49,10 @@ private slots:
     //音量滑块槽函数
     void on_slider_volume_valueChanged(int value);
 
-    //URL 设置按钮槽函数
-    void on_pb_url_clicked();
-
-    //推流服务下拉菜单槽函数
-    void on_pb_stream_service_clicked();
+    //自定义服务按钮槽函数
+    void on_pb_custom_clicked();
+    //网络直播按钮槽函数
+    void on_pb_network_live_clicked();
 
     //全屏切换槽函数
     void on_pb_fullscreen_clicked();
@@ -93,8 +93,12 @@ private:
     int m_currentRoomId;
     QTimer* m_heartbeatTimer;
 
+    QString m_userName;
+    QString m_userTel;
+
     //网络相关私有方法
     void showRoomListDialog(const QJsonArray& rooms);
     void playRoom(const QString& streamKey, int roomId);
+    void showNetworkLiveDialog();
 };
 #endif // PLAYERDIALOG_H

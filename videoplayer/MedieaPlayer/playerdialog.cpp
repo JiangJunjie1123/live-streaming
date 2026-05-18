@@ -4,8 +4,16 @@
 #include<QThread>
 #include<QMenu>
 #include<QVBoxLayout>
+#include<QHBoxLayout>
 #include<QPushButton>
+#include<QLabel>
 #include<QHeaderView>
+#include<QFile>
+#include<QTextStream>
+#include<QRegularExpression>
+#include<QInputDialog>
+#include<QLineEdit>
+#include<QFileDialog>
 #include "server_config.h"
 //#define _DEF_PATH "D:/KuGou/101.flv"
 
@@ -52,11 +60,54 @@ PlayerDialog::PlayerDialog(QWidget *parent)
     //设置进度条不接受键盘焦点，防止方向键被捕获
     ui->slider_progress->setFocusPolicy(Qt::NoFocus);
     //设置按钮不接受空格键快捷键
-    ui->pb_start->setFocusPolicy(Qt::NoFocus);
     ui->pb_pause->setFocusPolicy(Qt::NoFocus);
     ui->pb_resume->setFocusPolicy(Qt::NoFocus);
     ui->pb_stop->setFocusPolicy(Qt::NoFocus);
-    ui->pb_stream_service->setFocusPolicy(Qt::NoFocus);
+
+    // 自定义服务按钮（合并原 URL + 推流服务）
+    QPushButton* pbCustom = new QPushButton(QString::fromUtf8("自定义服务"), ui->wdg_bottom);
+    pbCustom->setObjectName("pb_custom");
+    pbCustom->setMinimumSize(72, 30);
+    pbCustom->setFont(QFont("Microsoft YaHei", 9));
+    pbCustom->setStyleSheet("QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }");
+    pbCustom->setCursor(Qt::PointingHandCursor);
+    pbCustom->setFocusPolicy(Qt::NoFocus);
+    connect(pbCustom, SIGNAL(clicked()), this, SLOT(on_pb_custom_clicked()));
+
+    // 网络直播按钮
+    QPushButton* pbNetLive = new QPushButton(QString::fromUtf8("网络直播"), ui->wdg_bottom);
+    pbNetLive->setObjectName("pb_network_live");
+    pbNetLive->setMinimumSize(72, 30);
+    pbNetLive->setFont(QFont("Microsoft YaHei", 9));
+    pbNetLive->setStyleSheet("QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }");
+    pbNetLive->setCursor(Qt::PointingHandCursor);
+    pbNetLive->setFocusPolicy(Qt::NoFocus);
+    connect(pbNetLive, SIGNAL(clicked()), this, SLOT(on_pb_network_live_clicked()));
+
+    // 在线主播按钮
+    QPushButton* pbRoom = new QPushButton(QString::fromUtf8("在线主播"), ui->wdg_bottom);
+    pbRoom->setObjectName("pb_roomList");
+    pbRoom->setMinimumSize(72, 30);
+    pbRoom->setFont(QFont("Microsoft YaHei", 9));
+    pbRoom->setStyleSheet("QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }");
+    pbRoom->setCursor(Qt::PointingHandCursor);
+    pbRoom->setFocusPolicy(Qt::NoFocus);
+    connect(pbRoom, SIGNAL(clicked()), this, SLOT(on_pb_roomList_clicked()));
+
+    // 将三个按钮插入到 spacer 之前
+    QHBoxLayout* bottomLayout2 = qobject_cast<QHBoxLayout*>(ui->wdg_bottom->layout());
+    if (bottomLayout2) {
+        int spacerIdx = -1;
+        for (int i = 0; i < bottomLayout2->count(); i++) {
+            QSpacerItem* sp = bottomLayout2->itemAt(i)->spacerItem();
+            if (sp) { spacerIdx = i; break; }
+        }
+        if (spacerIdx >= 0) {
+            bottomLayout2->insertWidget(spacerIdx, pbCustom);
+            bottomLayout2->insertWidget(spacerIdx + 1, pbNetLive);
+            bottomLayout2->insertWidget(spacerIdx + 2, pbRoom);
+        }
+    }
 
     //设置对话框接受焦点
     this->setFocusPolicy(Qt::StrongFocus);
@@ -74,6 +125,19 @@ PlayerDialog::PlayerDialog(QWidget *parent)
     m_userId = 0;
     m_currentRoomId = 0;
     m_heartbeatTimer = nullptr;
+
+    m_userName.clear();
+    m_userTel.clear();
+
+    // 用户信息标签
+    QLabel* lbUser = new QLabel(this);
+    lbUser->setObjectName("lb_user");
+    lbUser->setStyleSheet("color: #86868B; background: transparent; font-family: Microsoft YaHei; font-size: 9px;");
+    lbUser->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    QHBoxLayout* bottomLayout = qobject_cast<QHBoxLayout*>(ui->wdg_bottom->layout());
+    if (bottomLayout) {
+        bottomLayout->addWidget(lbUser);
+    }
 }
 
 PlayerDialog::~PlayerDialog()
@@ -240,21 +304,41 @@ void PlayerDialog::on_slider_volume_valueChanged(int value)
     ui->lb->setText(QString::number(m_volume) + "%");
 }
 
-//URL 设置按钮槽函数
-#include <QInputDialog>
-#include <QMessageBox>
-#include <QFile>
-void PlayerDialog::on_pb_url_clicked()
+//自定义服务按钮（合并 URL + 推流服务）
+void PlayerDialog::on_pb_custom_clicked()
 {
-    bool ok;
-    QString url = QInputDialog::getText(this,
-                                        tr("设置"),
-                                        tr("请输入链接地址:"),
-                                        QLineEdit::Normal,
-                                        QString(),
-                                        &ok);
-    if (ok && !url.isEmpty()) {
-        // 本地路径：标准化斜杠方向，方便 FFmpeg 打开
+    QMenu menu(this);
+    QAction *actFile = menu.addAction("打开文件");
+    menu.addSeparator();
+    QAction *actLive = menu.addAction("RTMP 直播推流");
+    QAction *actVod  = menu.addAction("RTMP 点播");
+    QAction *actHls  = menu.addAction("HLS 点播");
+    menu.addSeparator();
+    QAction *actUrl  = menu.addAction("自定义URL");
+
+    QPushButton* btn = findChild<QPushButton*>("pb_custom");
+    QAction *chosen = menu.exec(btn->mapToGlobal(QPoint(0, btn->height())));
+
+    if (!chosen) return;
+
+    QString url;
+    bool ok = false;
+    const QString server = SERVER_HOST;
+
+    if (chosen == actFile) {
+        QString path = QFileDialog::getOpenFileName(this, "打开文件", "./",
+            "视频文件 (*.flv *.rmvb *.avi *.MP4 *.mkv);;所有文件(*.*);;");
+        if (path.isEmpty()) return;
+        url = path;
+    }
+    else if (chosen == actUrl) {
+        url = QInputDialog::getText(this,
+                                    tr("设置"),
+                                    tr("请输入链接地址:"),
+                                    QLineEdit::Normal,
+                                    QString(),
+                                    &ok);
+        if (!ok || url.isEmpty()) return;
         if (!url.contains("://")) {
             url.replace('\\', '/');
             if (!QFile::exists(url)) {
@@ -263,37 +347,8 @@ void PlayerDialog::on_pb_url_clicked()
                 return;
             }
         }
-
-        // 停止当前播放
-        if(m_player->playerState() != PlayerState::Stop){
-            m_player->stop(true);
-        }
-        QThread::msleep(50);  // ensure read thread has fully exited
-        // 设置 URL 并播放
-        m_player->setFileName(url);
-        m_player->start();
-        slot_PlayerStateChanged(PlayerState::Playing);
     }
-}
-
-//推流服务下拉菜单
-void PlayerDialog::on_pb_stream_service_clicked()
-{
-    QMenu menu(this);
-    QAction *actLive = menu.addAction("RTMP 直播推流");
-    QAction *actVod  = menu.addAction("RTMP 点播");
-    QAction *actHls  = menu.addAction("HLS 点播");
-
-    QAction *chosen = menu.exec(ui->pb_stream_service->mapToGlobal(
-        QPoint(0, ui->pb_stream_service->height())));
-
-    if (!chosen) return;
-
-    QString url;
-    bool ok = false;
-    const QString server = SERVER_HOST;
-
-    if (chosen == actLive) {
+    else if (chosen == actLive) {
         QString key = QInputDialog::getText(this, "RTMP 直播推流",
             QString("推流服务器: rtmp://%1:1935/videotest/\n请输入推流码:").arg(server),
             QLineEdit::Normal, "user=100", &ok);
@@ -318,13 +373,18 @@ void PlayerDialog::on_pb_stream_service_clicked()
 
     if (url.isEmpty()) return;
 
-    //停止当前播放
     if (m_player->playerState() != PlayerState::Stop)
         m_player->stop(true);
-
+    QThread::msleep(50);
     m_player->setFileName(url);
     m_player->start();
     slot_PlayerStateChanged(PlayerState::Playing);
+}
+
+//网络直播按钮
+void PlayerDialog::on_pb_network_live_clicked()
+{
+    showNetworkLiveDialog();
 }
 
 #include<QStyle>
@@ -565,10 +625,17 @@ void PlayerDialog::showRoomListDialog(const QJsonArray& rooms)
 
     layout->addWidget(table);
 
+    QHBoxLayout* btnLayout = new QHBoxLayout;
     QPushButton* btnRefresh = new QPushButton("Refresh", &dlg);
-    layout->addWidget(btnRefresh);
+    QPushButton* btnCancel = new QPushButton("Cancel", &dlg);
+    btnLayout->addWidget(btnRefresh);
+    btnLayout->addWidget(btnCancel);
+    layout->addLayout(btnLayout);
     connect(btnRefresh, &QPushButton::clicked, [this]() {
         requestRoomList();
+    });
+    connect(btnCancel, &QPushButton::clicked, [&dlg]() {
+        dlg.reject();
     });
 
     connect(table, &QTableWidget::cellDoubleClicked, [&](int row, int) {
@@ -644,4 +711,107 @@ void PlayerDialog::slot_disconnected()
 {
     QMessageBox::warning(this, "disconnected", "Server connection lost");
     if (m_heartbeatTimer) m_heartbeatTimer->stop();
+}
+
+void PlayerDialog::setUserInfo(const QString& name, const QString& tel)
+{
+    m_userName = name;
+    m_userTel = tel;
+    QLabel* lb = findChild<QLabel*>("lb_user");
+    if (lb) {
+        if (!name.isEmpty() || !tel.isEmpty()) {
+            lb->setText(name + "(" + tel + ")");
+        }
+    }
+}
+
+void PlayerDialog::showNetworkLiveDialog()
+{
+    QFile file("D:/Video/url.txt");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Error", "Cannot open url.txt");
+        return;
+    }
+
+    QMap<int, QString> idToName;
+    QMap<int, QString> idToUrl;
+
+    QTextStream in(&file);
+    in.setCodec("UTF-8");
+    QRegularExpression nameRe("^(\\d+)=(.+)");
+    QRegularExpression urlRe("^(\\d+)_url=(.+)");
+
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        QRegularExpressionMatch mName = nameRe.match(line);
+        QRegularExpressionMatch mUrl = urlRe.match(line);
+        if (mName.hasMatch()) {
+            int id = mName.captured(1).toInt();
+            idToName[id] = mName.captured(2).trimmed();
+        } else if (mUrl.hasMatch()) {
+            int id = mUrl.captured(1).toInt();
+            idToUrl[id] = mUrl.captured(2).trimmed();
+        }
+    }
+    file.close();
+
+    // Build ordered list
+    QList<QPair<QString,QString>> chanList;
+    for (int id = 1; id <= 100; id++) {
+        if (idToName.contains(id) && idToUrl.contains(id))
+            chanList.append({idToName[id], idToUrl[id]});
+    }
+
+    if (chanList.isEmpty()) {
+        QMessageBox::information(this, "Info", "No channels found in url.txt");
+        return;
+    }
+
+    QDialog dlg(this);
+    dlg.setWindowTitle("Network Live Channels");
+    dlg.resize(450, 450);
+    QVBoxLayout* layout = new QVBoxLayout(&dlg);
+    QTableWidget* table = new QTableWidget(&dlg);
+    table->setColumnCount(1);
+    table->setHorizontalHeaderLabels({"Channel"});
+    table->horizontalHeader()->setStretchLastSection(true);
+    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->setRowCount(chanList.size());
+    for (int i = 0; i < chanList.size(); i++) {
+        QTableWidgetItem* item = new QTableWidgetItem(chanList[i].first);
+        item->setData(Qt::UserRole, chanList[i].second);
+        table->setItem(i, 0, item);
+    }
+    layout->addWidget(table);
+
+    QHBoxLayout* btnLayout = new QHBoxLayout;
+    QPushButton* btnOk = new QPushButton("Play", &dlg);
+    QPushButton* btnCancel = new QPushButton("Cancel", &dlg);
+    btnLayout->addWidget(btnOk);
+    btnLayout->addWidget(btnCancel);
+    layout->addLayout(btnLayout);
+
+    connect(btnCancel, &QPushButton::clicked, [&dlg]() { dlg.reject(); });
+    auto playUrl = [&](const QString& url) {
+        if (url.isEmpty()) return;
+        if (m_player->playerState() != PlayerState::Stop)
+            m_player->stop(true);
+        QThread::msleep(50);
+        m_player->setFileName(url);
+        m_player->start();
+        slot_PlayerStateChanged(PlayerState::Playing);
+    };
+    connect(btnOk, &QPushButton::clicked, [&]() {
+        int row = table->currentRow();
+        if (row < 0) return;
+        dlg.accept();
+        playUrl(table->item(row, 0)->data(Qt::UserRole).toString());
+    });
+    connect(table, &QTableWidget::cellDoubleClicked, [&](int row, int) {
+        dlg.accept();
+        playUrl(table->item(row, 0)->data(Qt::UserRole).toString());
+    });
+
+    dlg.exec();
 }

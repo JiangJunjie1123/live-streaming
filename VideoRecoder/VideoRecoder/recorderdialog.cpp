@@ -6,6 +6,7 @@
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QProcessEnvironment>
+#include <QLabel>
 #include "server_config.h"
 
 RecorderDialog::RecorderDialog(QWidget *parent)
@@ -52,11 +53,20 @@ RecorderDialog::RecorderDialog(QWidget *parent)
     connect(m_pbStartStreamBtn, SIGNAL(clicked()),
             this, SLOT(on_pb_startStream_clicked()));
 
+    m_userName.clear();
+    m_userTel.clear();
+
+    QLabel* lbUser = new QLabel(ui->wdg_content);
+    lbUser->setObjectName("lb_user");
+    lbUser->setStyleSheet("color: #86868B; background: transparent; font-family: Microsoft YaHei; font-size: 10px;");
+    lbUser->setAlignment(Qt::AlignCenter);
+
     QCheckBox* cbSysAudio = new QCheckBox(QString::fromUtf8("系统音频"), ui->wdg_content);
     cbSysAudio->setChecked(false);
     cbSysAudio->setObjectName("cb_sysAudio");
     QVBoxLayout* vLayout = qobject_cast<QVBoxLayout*>(ui->wdg_content->layout());
     if (vLayout) {
+        vLayout->insertWidget(0, lbUser);
         int idx = vLayout->indexOf(ui->pb_start);
         vLayout->insertWidget(idx, cbSysAudio);
         vLayout->addWidget(m_pbStartStreamBtn);
@@ -268,4 +278,16 @@ void RecorderDialog::slot_disconnected()
     QMessageBox::warning(this, "disconnected", "Server connection lost");
     if (m_heartbeatTimer) m_heartbeatTimer->stop();
     m_isStreaming = false;
+}
+
+void RecorderDialog::setUserInfo(const QString& name, const QString& tel)
+{
+    m_userName = name;
+    m_userTel = tel;
+    QLabel* lb = ui->wdg_content->findChild<QLabel*>("lb_user");
+    if (lb) {
+        if (!name.isEmpty() || !tel.isEmpty()) {
+            lb->setText(name + "(" + tel + ")");
+        }
+    }
 }

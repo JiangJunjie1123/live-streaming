@@ -161,56 +161,6 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QPushButton" name="pb_url">
-           <property name="minimumSize">
-            <size>
-             <width>44</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Microsoft YaHei</family>
-             <pointsize>9</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
-           </property>
-           <property name="text">
-            <string>URL</string>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pb_start">
-           <property name="minimumSize">
-            <size>
-             <width>64</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Microsoft YaHei</family>
-             <pointsize>9</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
-           </property>
-           <property name="text">
-            <string>打开文件</string>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="pb_resume">
            <property name="minimumSize">
             <size>
@@ -281,31 +231,6 @@
            </property>
            <property name="text">
             <string>停止</string>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pb_stream_service">
-           <property name="minimumSize">
-            <size>
-             <width>64</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>Microsoft YaHei</family>
-             <pointsize>9</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
-           </property>
-           <property name="text">
-            <string>推流服务</string>
            </property>
            <property name="cursor">
             <cursorShape>PointingHandCursor</cursorShape>

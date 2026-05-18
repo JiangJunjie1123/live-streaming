@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
     int userId = env.value("LIVE_USERID", "0").toInt();
 
     PlayerDialog w;
+    w.setUserInfo(env.value("LIVE_NAME", ""), env.value("LIVE_TEL", ""));
     w.show();
 
     if (!token.isEmpty()) {

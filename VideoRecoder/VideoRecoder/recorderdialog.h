@@ -24,6 +24,7 @@ public:
     ~RecorderDialog();
 
     void initNetwork(const QString& serverIp, const QString& token, int userId);
+    void setUserInfo(const QString& name, const QString& tel);
 
 private slots:
     void on_pb_start_clicked();
@@ -58,5 +59,7 @@ private:
     bool m_isStreaming;
     QTimer* m_heartbeatTimer;
     QPushButton* m_pbStartStreamBtn;
+    QString m_userName;
+    QString m_userTel;
 };
 #endif // RECORDERDIALOG_H
