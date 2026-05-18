@@ -1,0 +1,84 @@
+1.为什么要视频加速? 
+这部分我们来说一下视频加速的问题, 这里主要分为两个方面: 
+一.视频解码硬件加速, 也就是我们常说的硬解码（Hardware Decoding）, 它具有如下优势 
+➢ 更低的 CPU 使用率: 将解码的计算负担从 CPU 转移到硬件加速设备上 
+➢ 更好的解码性能和效率: 硬件解码能够以更低的功耗进行解码操作，对于移动设备和嵌入式
+系统来说尤为重要 
+➢ 支持更高的视频分辨率和比特率; 对于高清或者超高清视频，软件解码可能会面临性能瓶颈，
+而硬件解码则可以更好地处理这些要求较高的视频文件 
+➢ 减少功耗和延迟;  
+➢ 兼容性和稳定性更好; 
+硬件解码通过利用专用硬件资源和硬件加速技术，能够提供更低的 CPU 使用率、更高的解码性能
+和效率、更广泛的视频兼容性，并减少功耗和延迟。这使得硬件解码在实时视频播放、在线流媒
+体、游戏以及嵌入式设备等应用领域具有重要的作用。 
+二.视频编码硬件加速, 具有如下优势 
+➢ 更快的编码速度：够以更快的速度进行视频编码，提高编码的效率和实时性。 
+➢ 降低 CPU 使用率: 编码任务从 CPU 转移到专门的硬件加速设备上，降低 CPU 的使用率 
+➢ 减少功耗：移动设备、便携式设备和嵌入式系统来说尤为重要 
+➢ 保持视频质量：能够在保持较低的码率下实现更好的视觉效果 
+➢ 支持多路并行编码：可以实现多通道或者多摄像头同时进行实时编码 
+2. 视频解码硬件加速(硬解) 
+2.1 硬件支持 
+常见的硬件设备类型有 vaapi（（ Video Acceleration API 视频加速API）、qsv（（ Intel Quick Sync Video 因
+特尔集成显卡硬件加速技术）和 cuda（NVIDIA CUDA 英伟达统一计算架构）等。 
+➢ vaapi 是一种视频硬件加速开放标准, 适用于多个平台, 其中包括 Linux 开源图形驱动系统 , 
+Intel 集成显卡(Intel 图形驱动完全支持), AMD Radeon显卡 , ( NVIDIA 显卡不支持, 因为使用自
+家的CUDA) 
+➢ QSV 仅适用于搭载英特尔集成显卡的系统 , 通过使用相应的驱动程序和支持 QSV 的应用程序，
+可以实现利用显卡硬件加速进行视频处理。 
+➢ UVD (Unified Video Decoder)是 AMD Radeon 显卡上的硬件解码器。UVD 支持常见的视频编解
+码格式，如H.264、MPEG-2、VC-1 等，可以实时解码高清视频，并提供流畅的观看体验。 
+➢ NVDEC（（ NVIDIA硬件解码器）是NVIDIA显卡上的硬件解码器，用于对常见视频编码格式进行硬
+件解码 
+➢ CUDA（Compute Unified Device Architecture）是一种并行计算平台和编程模型，可以充分利用
+NVIDIA 显卡的GPU来加速视频处理任务。通过CUDA，开发者可以使用GPU中的核心进行视频
+编码、解码、滤镜处理等，从而大大提高视频处理速度。 
+2.2 硬解流程的实现 
+参考官方文档实现 
+➢ hw_decode.c    
+➢ qsvdec.c 
+代码解释 
+以hw_decode.c 为例 
+首先程序的输入是 ./程序名 <device type> <input file> <output file> 
+这里的<device type> 应该替换为硬件设备的类型名称, 也就是上面提到的一些技术, 例如可以是
+vaapi , qsv , cuda 等 , 比如可以是 ./程序名 vaapi input.mp4 output.yuv 
+<input file> 输入路径, 可以是本地文件路径或是网络URL 
+<output file> 解码后输出的原始数据文件路径 
+思路: 首先使用常规的流程读取AVPacket, 只是解码器比较特别, 需要特殊的操作, 要单独申请 
+1. AVHWDeviceType   type = av_hwdevice_find_type_by_name(argv[1]); // 用来查找硬件设备类型 
+if (type == AV_HWDEVICE_TYPE_NONE) { //没有支持 
+fprintf(stderr, "Device type %s is not supported.\n", argv[1]); 
+fprintf(stderr, "Available device types:"); 
+while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE) 
+fprintf(stderr, " %s", av_hwdevice_get_type_name(type)); 
+fprintf(stderr, "\n"); 
+return -1; 
+} 
+2. ret = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &decoder, 0); 查找视频流索引
+并给decoder赋值 
+3. const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i); 设置解码器 
+4. if (!(decoder_ctx = avcodec_alloc_context3(decoder))) //申请解码器对应的解码器上下文 
+return AVERROR(ENOMEM); 
+5.int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type); //该函数用来初始化
+硬解上下文结构体 , type 就是上面查找的类型 
+6.读取视频帧 
+7.解码 , 前面的部分都是一样的 
+通过avcodec_send_packet(avctx, packet); 
+然后使用ret = avcodec_receive_frame(avctx, frame); 从解码器中读取, 
+只是由于是硬解, 借助GPU , 所以需要数据从GPU读到CPU 
+if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) { 
+/* … */ 
+} 
+8.全部解码完, 退出循环并回收资源 
+3.视频编码硬件加速 
+3.1 硬件支持 
+常见的有vaapi, cuda , qsv, NVENC , AMD VCE 
+➢ vaapi, cuda , qsv 如上面提到的, 也可以用于编码的硬件加速 
+➢ NVENC（（ NVIDIA硬件编码器）：NVENC是NVIDIA显卡上的硬件编码器，可用于快速进行视频编
+码，如H.264、HEVC等。通过利用NVENC，用户可以进行快速的视频转码、视频录制和实时的
+游戏直播，而不会对CPU性能造成太大影响。 
+➢ AMD VCE是AMD显卡上的硬件视频编码引擎。类似于NVIDIA的NVENC，AMD VCE可以用于
+快速进行视频编码，并且减轻CPU的负担。 
+3.2 视频编码硬件加速的实现 
+参考官方文档实现 
+vaapi_encode.c

@@ -1,0 +1,51 @@
+<h2>部署与推流架构</h2>
+<p class="subtitle">选定 C++ 技术栈后，需要确定服务器部署位置和 RTMP 推流方案</p>
+
+<h3 style="margin-top: 24px;">第一步：服务器部署在哪？</h3>
+
+<div class="cards">
+  <div class="card" data-choice="linux-vm" onclick="toggleSelect(this)" style="border-color: var(--primary,#4f46e5); border-width: 2px;">
+    <div class="card-body">
+      <h3>A. Linux 虚拟机 (192.168.136.137)</h3>
+      <p>参考现有 ssh_vm.py，把 C++ epoll 服务器部署到 Linux VM</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>现有 demo 代码就是 Linux 的，直接编译运行</li><li>epoll 性能好，生产环境标准</li><li>可以顺便部署 nginx-rtmp</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>需要交叉编译或用 Linux 编译</li><li>调试不如本地方便</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" data-choice="windows-local" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B. 本地 Windows</h3>
+      <p>服务器直接跑在当前 Windows 机器上</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>调试方便，无需SSH</li><li>编译环境一致</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>netapi 用 WinSock2 但 demo 用 epoll，两套代码要整合</li><li>不适合生产环境</li><li>其他客户端需要知道本机IP</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">第二步：RTMP 推流怎么走？</h3>
+
+<div class="mockup" style="margin-top: 16px;">
+  <div class="mockup-header">方案A推流链路（推荐）</div>
+  <div class="mockup-body">
+    <pre style="font-size:13px; line-height:1.8; background:#1e293b; color:#e2e8f0; padding:16px; border-radius:8px;">
+┌──────────────┐    RTMP推流     ┌─────────────────┐    RTMP拉流     ┌──────────────┐
+│ VideoRecoder │ ──────────────→ │  nginx-rtmp     │ ──────────────→ │ MediaPlayer  │
+│  (主播端)     │   port 1935    │  (Linux VM)     │   port 1935    │  (观众端)     │
+└──────┬───────┘                 └────────┬────────┘                 └──────────────┘
+       │                                  │
+       │ ① 登录/获取推流密钥                │
+       │    TCP :8000                     │
+       └──────────────────────→ ┌─────────────────┐
+                                │  C++ 业务服务器   │
+                                │  epoll + MySQL   │
+                                │  (Linux VM :8000)│
+                                └─────────────────┘</pre>
+    <p style="margin-top: 12px;">业务服务器只负责：用户认证、房间管理、流密钥分配。音视频数据走 nginx-rtmp，不经过业务服务器。</p>
+  </div>
+</div>
+
+<p style="margin-top: 16px; color: var(--muted,#64748b);">推荐部署到 Linux VM（方案A），可以同时跑 C++ 业务服务器 + nginx-rtmp 媒体服务器。请选择并告诉我你的想法。</p>

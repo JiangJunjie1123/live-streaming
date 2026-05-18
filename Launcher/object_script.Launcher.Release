@@ -1,0 +1,14 @@
+release/main.o
+release/logindialog.o
+release/role_select_dialog.o
+release/INetMediator.o
+release/TcpClientMediator.o
+release/TcpServerMediator.o
+release/UdpMediator.o
+release/INet.o
+release/TcpClient.o
+release/TcpServer.o
+release/UdpNet.o
+release/moc_logindialog.o
+release/moc_role_select_dialog.o
+release/moc_INetMediator.o

@@ -1,0 +1,53 @@
+<h2>功能范围与数据库设计</h2>
+<p class="subtitle">选定架构后，需要确定第一期实现的完整功能清单</p>
+
+<h3 style="margin-top: 20px;">数据库表设计（草案）</h3>
+
+<pre style="font-size:13px; line-height:1.6; background:#1e293b; color:#e2e8f0; padding:16px; border-radius:8px;">
+┌─────────────────────────────────────────────────────┐
+│  users (用户表)                                      │
+│  id | tel | nickname | password | role | created_at  │
+│      role: 0=观众, 1=主播                             │
+├─────────────────────────────────────────────────────┤
+│  rooms (直播间表)                                     │
+│  id | user_id | title | stream_key | status | viewers │
+│      status: 0=离线, 1=直播中                          │
+│      stream_key: 主播推流时使用的密钥                    │
+├─────────────────────────────────────────────────────┤
+│  (可选) follows (关注表)                              │
+│  follower_id | followed_id                           │
+└─────────────────────────────────────────────────────┘
+</pre>
+
+<h3 style="margin-top: 24px;">第一期功能范围选择</h3>
+
+<div class="cards">
+  <div class="card" data-choice="minimal" onclick="toggleSelect(this)" style="border-color: var(--primary,#4f46e5); border-width: 2px;">
+    <div class="card-body">
+      <h3>A. MVP 最小版本（推荐先做）</h3>
+      <p>注册/登录 → 主播创建房间获取推流密钥 → 观众获取直播间列表 → 拉流观看</p>
+      <p style="font-size:13px;color:#888;">协议：注册、登录、创建房间、房间列表、获取流密钥<br/>2张表：users + rooms</p>
+    </div>
+  </div>
+  <div class="card" data-choice="full" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B. 完整社交版本</h3>
+      <p>MVP + 关注主播 + 弹幕聊天 + 观看人数实时更新 + 直播回放</p>
+      <p style="font-size:13px;color:#888;">协议增加：关注、弹幕、在线人数推送<br/>4+张表：users + rooms + follows + chats + replays</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 24px;">Launcher 之后的应用启动方式</h3>
+
+<div class="cards">
+  <div class="card" data-choice="launcher-spawn" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>A. Launcher 启动子进程</h3>
+      <p>Launcher 登录后，QProcess::start() 启动 Recorder/Player.exe，通过命令行参数传递用户信息和服务器地址</p>
+      <p style="font-size:13px;color:#888;">简单直接，子应用无需关心登录逻辑</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 16px; color: var(--muted,#64748b);">推荐先做 MVP 版本，把核心链路跑通。请选择功能范围 A 或 B。</p>

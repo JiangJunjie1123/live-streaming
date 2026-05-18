@@ -1,0 +1,14 @@
+debug/main.o
+debug/logindialog.o
+debug/role_select_dialog.o
+debug/INetMediator.o
+debug/TcpClientMediator.o
+debug/TcpServerMediator.o
+debug/UdpMediator.o
+debug/INet.o
+debug/TcpClient.o
+debug/TcpServer.o
+debug/UdpNet.o
+debug/moc_logindialog.o
+debug/moc_role_select_dialog.o
+debug/moc_INetMediator.o

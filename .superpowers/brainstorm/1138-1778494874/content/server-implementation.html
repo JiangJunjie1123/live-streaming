@@ -1,0 +1,59 @@
+<h2>服务器端实现路线</h2>
+<p class="subtitle">资料中提供了两套服务器框架，需要选择基础路线</p>
+
+<h3 style="margin-top: 20px;">两套框架对比</h3>
+
+<div class="cards">
+  <div class="card" data-choice="epoll-server" onclick="toggleSelect(this)" style="border-color: var(--primary,#4f46e5); border-width: 2px;">
+    <div class="card-body">
+      <h3>A. 基于 Epoll Demo 扩展（推荐）</h3>
+      <p>使用 serverDemo（epoll + 线程池 + MySQL），补充完整的注册/登录/房间管理逻辑</p>
+      <pre style="font-size:12px; background:#1e293b; color:#e2e8f0; padding:12px; border-radius:6px;">
+TCPKernel (单例)
+  ├── Block_Epoll_Net (epoll 网络)
+  ├── Thread_Pool (处理数据包)
+  ├── CMysql (数据库)
+  └── CLogic (业务逻辑→注册/登录/房间)</pre>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>Linux 原生，epoll 高性能</li><li>线程池已封装好</li><li>MySQL 操作类已就绪</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>需要补充 CLogic 业务逻辑</li><li>协议需要扩展</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" data-choice="netapi-server" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B. 基于 netapi (Qt) 重新实现</h3>
+      <p>用 netapi 的 TcpServerMediator + Qt 信号槽做服务器，客户端用 TcpClientMediator</p>
+      <pre style="font-size:12px; background:#1e293b; color:#e2e8f0; padding:12px; border-radius:6px;">
+INetMediator (Qt信号槽)
+  ├── TcpServerMediator (服务器)
+  ├── TcpClientMediator (客户端→Launcher)
+  └── 自建业务处理 + MySQL</pre>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>客户端可直接复用 netapi</li><li>Qt 信号槽开发体验一致</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>服务器需要 Qt 运行时(~20MB)</li><li>epoll 不如原生灵活</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 24px;">客户端对接方案</h3>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">方案 A：两端不同协议</div>
+    <div class="mockup-body" style="padding:16px;">
+      <p class="label">服务器使用 epoll demo 自定义协议<br/>客户端用 Qt + socket 自行对接</p>
+      <p style="font-size:13px; color:#888;">协议格式：4字节长度 + 结构体数据<br/>客户端直接 send/recv 打包结构体</p>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">方案 B：两端统一 netapi</div>
+    <div class="mockup-body" style="padding:16px;">
+      <p class="label">服务器和客户端都用 netapi<br/>通过 SIG_ReadyData 信号接收数据</p>
+      <p style="font-size:13px; color:#888;">协议格式一样<br/>开发体验统一，但服务器需 Qt 依赖</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 16px; color: var(--muted,#64748b);">推荐方案A：服务器用 epoll demo 做高性能后端，客户端用 Qt socket 直接对接二进制协议（格式一致，都是 4 字节头 + 结构体）。</p>

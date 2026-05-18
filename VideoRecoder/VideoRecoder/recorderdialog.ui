@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RecorderDialog</class>
+ <widget class="QDialog" name="RecorderDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>660</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>视频录制</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog { background-color: #F5F5F7; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_main">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_content">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="wdg_show" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>480</width>
+         <height>360</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QWidget#wdg_show { background-color: #000000; border-radius: 10px; }</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_show">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="lb_showImage">
+          <property name="styleSheet">
+           <string notr="true">background-color: #000000; border-radius: 10px;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="wdg_content" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>130</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>140</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QWidget#wdg_content { background-color: #FFFFFF; border-radius: 10px; }</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_content">
+        <property name="spacing">
+         <number>8</number>
+        </property>
+        <property name="leftMargin">
+         <number>12</number>
+        </property>
+        <property name="topMargin">
+         <number>12</number>
+        </property>
+        <property name="rightMargin">
+         <number>12</number>
+        </property>
+        <property name="bottomMargin">
+         <number>12</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="lb_sources_label">
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>9</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: #1D1D1F; background: transparent;</string>
+          </property>
+          <property name="text">
+           <string>输入源</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="gb_camera">
+          <property name="title">
+           <string>摄像头</string>
+          </property>
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QGroupBox { color: #86868B; background: transparent; border: 1px solid #E5E5EA; border-radius: 8px; margin-top: 8px; padding-top: 14px; } QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_camera">
+           <property name="spacing">
+            <number>4</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>4</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="cbx_cameraDev">
+             <property name="styleSheet">
+              <string notr="true">QComboBox { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; padding: 4px 8px; } QComboBox:hover { border-color: #D1D1D6; } QComboBox:focus { border-color: #007AFF; } QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; width: 20px; border-left: 1px solid #E5E5EA; border-top-right-radius: 6px; border-bottom-right-radius: 6px; } QComboBox QAbstractItemView { background-color: #FFFFFF; color: #1D1D1F; selection-background-color: #F0F0F5; border: 1px solid #E5E5EA; }</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>默认设备</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="gb_audio">
+          <property name="title">
+           <string>音频</string>
+          </property>
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QGroupBox { color: #86868B; background: transparent; border: 1px solid #E5E5EA; border-radius: 8px; margin-top: 8px; padding-top: 14px; } QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_audio">
+           <property name="spacing">
+            <number>4</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>4</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="cbx_audioDev">
+             <property name="styleSheet">
+              <string notr="true">QComboBox { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; padding: 4px 8px; } QComboBox:hover { border-color: #D1D1D6; } QComboBox:focus { border-color: #007AFF; } QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; width: 20px; border-left: 1px solid #E5E5EA; border-top-right-radius: 6px; border-bottom-right-radius: 6px; } QComboBox QAbstractItemView { background-color: #FFFFFF; color: #1D1D1F; selection-background-color: #F0F0F5; border: 1px solid #E5E5EA; }</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>默认设备</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cb_camera">
+          <property name="text">
+           <string>摄像头</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QCheckBox { color: #1D1D1F; spacing: 6px; } QCheckBox::indicator { width: 16px; height: 16px; border: 1.5px solid #D1D1D6; border-radius: 4px; background-color: #FFFFFF; } QCheckBox::indicator:checked { background-color: #007AFF; border-color: #007AFF; } QCheckBox::indicator:hover { border-color: #007AFF; }</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cb_desktop">
+          <property name="text">
+           <string>桌面</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QCheckBox { color: #1D1D1F; spacing: 6px; } QCheckBox::indicator { width: 16px; height: 16px; border: 1.5px solid #D1D1D6; border-radius: 4px; background-color: #FFFFFF; } QCheckBox::indicator:checked { background-color: #007AFF; border-color: #007AFF; } QCheckBox::indicator:hover { border-color: #007AFF; }</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cb_mic">
+          <property name="text">
+           <string>麦克风</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QCheckBox { color: #1D1D1F; spacing: 6px; } QCheckBox::indicator { width: 16px; height: 16px; border: 1.5px solid #D1D1D6; border-radius: 4px; background-color: #FFFFFF; } QCheckBox::indicator:checked { background-color: #007AFF; border-color: #007AFF; } QCheckBox::indicator:hover { border-color: #007AFF; }</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pb_start">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>34</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton { background-color: #007AFF; color: #FFFFFF; border: none; border-radius: 8px; } QPushButton:hover { background-color: #0066D6; } QPushButton:pressed { background-color: #0055B3; }</string>
+          </property>
+          <property name="text">
+           <string>开始</string>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pb_stop">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>34</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton { background-color: #FFFFFF; color: #FF3B30; border: 1.5px solid #FF3B30; border-radius: 8px; } QPushButton:hover { background-color: #FFF0EF; } QPushButton:pressed { background-color: #FFE0DE; }</string>
+          </property>
+          <property name="text">
+           <string>停止</string>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdg_urlbar" native="true">
+     <property name="styleSheet">
+      <string notr="true">QWidget#wdg_urlbar { background-color: #FFFFFF; border-radius: 8px; }</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_url">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin">
+       <number>12</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>12</number>
+      </property>
+      <property name="bottomMargin">
+       <number>8</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="lb_url">
+        <property name="font">
+         <font>
+          <family>Microsoft YaHei</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #86868B; background: transparent;</string>
+        </property>
+        <property name="text">
+         <string>推流地址</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="le_url">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Microsoft YaHei</family>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit { background-color: #F5F5F7; color: #1D1D1F; border: none; border-radius: 6px; padding: 4px 10px; } QLineEdit:focus { background-color: #F0F0F5; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_setUrl">
+        <property name="minimumSize">
+         <size>
+          <width>90</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Microsoft YaHei</family>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton { background-color: #007AFF; color: #FFFFFF; border: none; border-radius: 6px; } QPushButton:hover { background-color: #0066D6; } QPushButton:pressed { background-color: #0055B3; }</string>
+        </property>
+        <property name="text">
+         <string>设置</string>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

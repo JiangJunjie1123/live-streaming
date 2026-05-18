@@ -1,0 +1,55 @@
+<h2>客户端登录流程设计</h2>
+<p class="subtitle">主播端（VideoRecoder）和观众端（MediaPlayer）都需要登录，但角色不同</p>
+
+<h3 style="margin-top: 20px;">场景对比</h3>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">主播端 — VideoRecoder</div>
+    <div class="mockup-body" style="padding: 16px;">
+      <p class="label">工作流程</p>
+      <ol style="font-size:14px; line-height:2;">
+        <li>启动 → 弹出登录窗口</li>
+        <li>登录/注册（角色=主播）</li>
+        <li>获取推流密钥（服务器生成）</li>
+        <li>开始录制 + 推流到 RTMP 地址</li>
+        <li>观众进入直播间</li>
+      </ol>
+      <p style="margin-top:12px;font-size:12px;color:#888;">核心区别：登录后需要申请"推流密钥"才能推流</p>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">观众端 — MediaPlayer</div>
+    <div class="mockup-body" style="padding: 16px;">
+      <p class="label">工作流程</p>
+      <ol style="font-size:14px; line-height:2;">
+        <li>启动 → 弹出登录窗口</li>
+        <li>登录/注册（角色=观众）</li>
+        <li>获取直播间列表</li>
+        <li>选择一个直播间 → 拉流播放</li>
+      </ol>
+      <p style="margin-top:12px;font-size:12px;color:#888;">核心区别：登录后浏览直播间列表，选择直播间拉流观看</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 28px;">关键交互问题</h3>
+
+<div class="cards">
+  <div class="card" data-choice="same-app" onclick="toggleSelect(this)" style="border-color: var(--primary,#4f46e5); border-width: 2px;">
+    <div class="card-body">
+      <h3>A. 分开应用 + 各自内嵌登录</h3>
+      <p>VideoRecoder 和 MediaPlayer 各加一个登录对话框，角色在注册时选择（主播/观众），登录后进入对应功能</p>
+      <p style="font-size:13px;color:#888;">改动最小，两个应用各自独立</p>
+    </div>
+  </div>
+  <div class="card" data-choice="separate-login" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B. 统一启动器 + 两个子应用</h3>
+      <p>新建一个 Launcher 程序负责登录，登录后根据角色启动 Recorder 或 Player</p>
+      <p style="font-size:13px;color:#888;">架构更清晰，但多一个进程需要维护</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 16px; color: var(--muted,#64748b);">推荐方案A —— 改动最小，在两个现有应用中各加一个登录对话框即可。请选择。</p>

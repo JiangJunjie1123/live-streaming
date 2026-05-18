@@ -1,0 +1,12 @@
+release/main.o
+release/audio_read.o
+release/cuda_helper.o
+release/picinpic_read.o
+release/picturewidget.o
+release/recorderdialog.o
+release/savevideofilethread.o
+release/moc_audio_read.o
+release/moc_picinpic_read.o
+release/moc_picturewidget.o
+release/moc_recorderdialog.o
+release/moc_savevideofilethread.o

@@ -1,0 +1,10 @@
+# Video Live Streaming Platform
+build-*/
+*.o
+*.exe
+Makefile*
+moc_*
+ui_*.h
+debug/
+release/
+.qmake.stash

@@ -1,0 +1,12 @@
+debug/main.o
+debug/audio_read.o
+debug/cuda_helper.o
+debug/picinpic_read.o
+debug/picturewidget.o
+debug/recorderdialog.o
+debug/savevideofilethread.o
+debug/moc_audio_read.o
+debug/moc_picinpic_read.o
+debug/moc_picturewidget.o
+debug/moc_recorderdialog.o
+debug/moc_savevideofilethread.o

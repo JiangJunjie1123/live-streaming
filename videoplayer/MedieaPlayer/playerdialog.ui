@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PlayerDialog</class>
+ <widget class="QDialog" name="PlayerDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>660</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>视频播放</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog { background-color: #F5F5F7; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_main">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
+   <item>
+    <widget class="MyOpenGLWidget" name="wdg_show" native="true">
+     <property name="styleSheet">
+      <string notr="true">background-color: #000000; border-radius: 10px;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdg_controls" native="true">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>76</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>76</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QWidget#wdg_controls { background-color: #FFFFFF; border-radius: 10px; }</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_controls">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin">
+       <number>16</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_progress">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="lb_curTime">
+          <property name="minimumSize">
+           <size>
+            <width>64</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: #86868B; background: transparent;</string>
+          </property>
+          <property name="text">
+           <string>00:00:00</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="slider_progress">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QSlider::groove:horizontal { background: #E5E5EA; height: 4px; border-radius: 2px; } QSlider::sub-page:horizontal { background: #007AFF; height: 4px; border-radius: 2px; } QSlider::handle:horizontal { background: #FFFFFF; border: 2px solid #007AFF; width: 14px; height: 14px; margin: -5px 0; border-radius: 7px; } QSlider::handle:horizontal:hover { border-color: #0066D6; }</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lb_totalTime">
+          <property name="minimumSize">
+           <size>
+            <width>64</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>Microsoft YaHei</family>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: #86868B; background: transparent;</string>
+          </property>
+          <property name="text">
+           <string>00:00:00</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QWidget" name="wdg_bottom" native="true">
+        <property name="styleSheet">
+         <string notr="true">background: transparent;</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_buttons">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pb_url">
+           <property name="minimumSize">
+            <size>
+             <width>44</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
+           </property>
+           <property name="text">
+            <string>URL</string>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_start">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
+           </property>
+           <property name="text">
+            <string>打开文件</string>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_resume">
+           <property name="minimumSize">
+            <size>
+             <width>78</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background-color: #007AFF; color: #FFFFFF; border: none; border-radius: 6px; } QPushButton:hover { background-color: #0066D6; } QPushButton:pressed { background-color: #0055B3; }</string>
+           </property>
+           <property name="text">
+            <string>播放 / 恢复</string>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_pause">
+           <property name="minimumSize">
+            <size>
+             <width>48</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
+           </property>
+           <property name="text">
+            <string>暂停</string>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_stop">
+           <property name="minimumSize">
+            <size>
+             <width>48</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background-color: #F5F5F7; color: #FF3B30; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #FFF0EF; border-color: #FF3B30; } QPushButton:pressed { background-color: #FFE0DE; }</string>
+           </property>
+           <property name="text">
+            <string>停止</string>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_stream_service">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background-color: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5EA; border-radius: 6px; } QPushButton:hover { background-color: #EBEBF0; border-color: #D1D1D6; } QPushButton:pressed { background-color: #E0E0E5; }</string>
+           </property>
+           <property name="text">
+            <string>推流服务</string>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color: #86868B; background: transparent;</string>
+           </property>
+           <property name="text">
+            <string>音量</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="slider_volume">
+           <property name="minimumSize">
+            <size>
+             <width>90</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QSlider::groove:horizontal { background: #E5E5EA; height: 3px; border-radius: 1px; } QSlider::sub-page:horizontal { background: #007AFF; height: 3px; border-radius: 1px; } QSlider::handle:horizontal { background: #FFFFFF; border: 1.5px solid #D1D1D6; width: 12px; height: 12px; margin: -5px 0; border-radius: 6px; } QSlider::handle:horizontal:hover { border-color: #007AFF; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lb">
+           <property name="minimumSize">
+            <size>
+             <width>36</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color: #86868B; background: transparent;</string>
+           </property>
+           <property name="text">
+            <string>50%</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyOpenGLWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">myopenglwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

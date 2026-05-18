@@ -1,0 +1,34 @@
+<h2>整体架构：两种方案对比</h2>
+<p class="subtitle">你的项目现状：Windows Qt 桌面应用（录屏器 + 播放器），已有一台 Linux 服务器 (192.168.136.137)</p>
+
+<h3 style="margin-top:24px;">方案对比</h3>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>方案A：纯 Qt/C++ 技术栈</h3>
+      <p>服务器用 C++ 写（参考现有 netapi + epoll 框架），客户端在 Qt 中集成登录UI</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>和现有代码技术栈一致</li><li>可直接复用 netapi 网络库</li><li>无额外运行时依赖</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>服务器开发效率低</li><li>缺少成熟的Web管理后台</li><li>API 扩展麻烦</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" data-choice="b" onclick="toggleSelect(this)" style="border-color: var(--primary,#4f46e5); border-width: 2px;">
+    <div class="card-body">
+      <h3>方案B：Python FastAPI 后端 + Qt 客户端（推荐）</h3>
+      <p>后端用 FastAPI + MySQL，客户端 Qt 通过 HTTP API 通信，推流继续用 RTMP</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>开发效率高，FastAPI 自带 Swagger 文档</li><li>天然支持 RESTful API，易于扩展</li><li>可同时支持 Web 管理后台</li><li>Python 生态丰富（JWT、ORM等）</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>需要在 Qt 中引入 HTTP 客户端</li><li>Python 运行时依赖</li><li>高并发需额外优化</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: var(--surface,#f8fafc); border-radius: 8px;">
+  <h4>我的推荐：方案B</h4>
+  <p>考虑到你需要快速迭代（注册登录 + 主播/观众角色 + 数据库），Python FastAPI 的生产力远超纯C++。推流本身仍然用 RTMP（nginx-rtmp 或 SRS），不经过后端逻辑，后端只负责：用户管理、房间管理、流密钥分发。</p>
+</div>
+
+<p style="margin-top: 16px; color: var(--muted,#64748b);">请在浏览器中选择方案，然后告诉我你的决定。</p>
