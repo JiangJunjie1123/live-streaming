@@ -52,17 +52,15 @@ RecorderDialog::RecorderDialog(QWidget *parent)
     connect(m_pbStartStreamBtn, SIGNAL(clicked()),
             this, SLOT(on_pb_startStream_clicked()));
 
-    // "系统音频" 复选框 — 代码创建，不修改 .ui
     QCheckBox* cbSysAudio = new QCheckBox(QString::fromUtf8("系统音频"), ui->wdg_content);
-    cbSysAudio->setChecked(false);  // 默认关闭，避免同机测试闭环
+    cbSysAudio->setChecked(false);
+    cbSysAudio->setObjectName("cb_sysAudio");
     QVBoxLayout* vLayout = qobject_cast<QVBoxLayout*>(ui->wdg_content->layout());
     if (vLayout) {
-        // 插入到 pb_start 之前（spacer 之后）
         int idx = vLayout->indexOf(ui->pb_start);
         vLayout->insertWidget(idx, cbSysAudio);
         vLayout->addWidget(m_pbStartStreamBtn);
     }
-    cbSysAudio->setObjectName("cb_sysAudio");
 }
 
 RecorderDialog::~RecorderDialog()
@@ -98,7 +96,7 @@ void RecorderDialog::on_pb_start_clicked()
     format.fileName = m_saveUrl;
     format.frame_rate = FRAME_RATE;
     // 根据复选框状态决定是否录制音频
-    format.hasAudio = ui->cb_mic->isChecked();                  // 麦克风
+    format.hasAudio = ui->cb_mic->isChecked();
     format.hasSysAudio = ui->wdg_content->findChild<QCheckBox*>("cb_sysAudio")->isChecked();
     format.hasCamera = ui->cb_camera->isChecked();
     format.hasDesk = ui->cb_desktop->isChecked();

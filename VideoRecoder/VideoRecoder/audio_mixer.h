@@ -69,7 +69,7 @@ private:
     SwrContext*   swr = nullptr;
     QTimer*       timer;
     int           m_playState = state_stop;
-    bool          m_enableSystemAudio = true;
+    bool          m_enableSystemAudio = false;
 
     // ---- helpers ----------------------------------------------------------
     QAudioDeviceInfo findDeviceByName(const QString& name);

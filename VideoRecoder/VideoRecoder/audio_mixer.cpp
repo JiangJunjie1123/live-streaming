@@ -25,6 +25,7 @@ Audio_Mixer::Audio_Mixer(const QString& systemAudioDevice,
     m_micDev.deviceName    = micDevice;
 
     timer = new QTimer(this);
+    timer->setTimerType(Qt::PreciseTimer);
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_readMore()));
 
     m_playState = state_stop;
@@ -173,17 +174,16 @@ void Audio_Mixer::slot_openAudio()
 
     bool sysOpened = false;
     if (m_enableSystemAudio) {
-        if (!openDevice(m_systemDev)) {
-            qWarning() << "Audio_Mixer: failed to open system audio device";
-        } else {
+        if (openDevice(m_systemDev)) {
             sysOpened = true;
         }
     }
     if (!openDevice(m_micDev)) {
-        qWarning() << "Audio_Mixer: failed to open microphone device";
         if (sysOpened) closeDevice(m_systemDev);
         return;
     }
+    if (!sysOpened && m_enableSystemAudio)
+        qWarning() << "Audio_Mixer: system audio not available, mic only";
 
     m_playState = state_play;
 
@@ -208,11 +208,7 @@ void Audio_Mixer::slot_openAudio()
     }
 
     // 文献 2.1.2：用 readyRead 事件驱动代替定时器轮询
-    if (sysOpened)
-        connect(m_systemDev.myBuffer_in, &QIODevice::readyRead,
-                this, &Audio_Mixer::slot_readMore);
-    connect(m_micDev.myBuffer_in, &QIODevice::readyRead,
-            this, &Audio_Mixer::slot_readMore);
+    timer->start(AUDIO_INTERVAL);
 }
 
 void Audio_Mixer::slot_readMore()
@@ -221,10 +217,9 @@ void Audio_Mixer::slot_readMore()
         return;
     if (!m_micDev.audio_in)
         return;
-
     bool sysActive = (m_systemDev.audio_in && m_systemDev.myBuffer_in);
 
-    // ---- 1. Read from active devices ----
+    // ---- 1. Read from both devices ----
     if (sysActive) readFromDevice(m_systemDev);
     readFromDevice(m_micDev);
 
@@ -232,10 +227,7 @@ void Audio_Mixer::slot_readMore()
     int framesMic = static_cast<int>(m_micDev.m_audiobuff.size()) / OneAudioSize;
     if (framesMic <= 0) return;
 
-    int framesSys = 0;
-    if (sysActive)
-        framesSys = static_cast<int>(m_systemDev.m_audiobuff.size()) / OneAudioSize;
-
+    int framesSys = sysActive ? static_cast<int>(m_systemDev.m_audiobuff.size()) / OneAudioSize : 0;
     int nFrameCount = sysActive ? std::min(framesSys, framesMic) : framesMic;
     if (nFrameCount <= 0) return;
 
@@ -246,27 +238,11 @@ void Audio_Mixer::slot_readMore()
     const int16_t* pSys = sysActive ? reinterpret_cast<const int16_t*>(m_systemDev.m_audiobuff.data()) : nullptr;
 
     std::vector<uint8_t> mixedBuf;
-    const uint8_t* in_plane = nullptr;
+    const uint8_t* in_plane;
 
     if (sysActive) {
-        // ---- 4a. Mix in S16 domain: system*0.8 + mic*1.0 -> clamped ----
         mixedBuf.resize(mixedBytes);
         int16_t* pMixed = reinterpret_cast<int16_t*>(mixedBuf.data());
-
-        static int diagFrameCount = 0;
-        diagFrameCount += nFrameCount;
-        if (diagFrameCount >= 100) {
-            diagFrameCount = 0;
-            int16_t peakSys = 0, peakMic = 0;
-            for (int i = 0; i < totalSamples; ++i) {
-                int16_t s = pSys[i] > 0 ? pSys[i] : (int16_t)(-pSys[i]);
-                int16_t m = pMic[i] > 0 ? pMic[i] : (int16_t)(-pMic[i]);
-                if (s > peakSys) peakSys = s;
-                if (m > peakMic) peakMic = m;
-            }
-            qDebug() << "[Audio_Mixer] systemPeak:" << peakSys << "micPeak:" << peakMic;
-        }
-
         for (int i = 0; i < totalSamples; ++i) {
             float mix = static_cast<float>(pSys[i]) * 0.8f + static_cast<float>(pMic[i]) * 1.0f;
             if (mix > static_cast<float>(INT16_MAX)) mix = static_cast<float>(INT16_MAX);
@@ -275,7 +251,6 @@ void Audio_Mixer::slot_readMore()
         }
         in_plane = mixedBuf.data();
     } else {
-        // 4b. 仅麦克风 → 直接送 mic 数据入 swr_convert
         in_plane = reinterpret_cast<const uint8_t*>(pMic);
     }
 
@@ -337,19 +312,14 @@ void Audio_Mixer::slot_readMore()
 
     // ---- 7. Consume from buffers ----
     int consumedBytes = nFrameCount * OneAudioSize;
-    if (sysActive)
-        updateBufferPos(m_systemDev, consumedBytes);
+    if (sysActive) updateBufferPos(m_systemDev, consumedBytes);
     updateBufferPos(m_micDev, consumedBytes);
 }
 
 void Audio_Mixer::slot_closeAudio()
 {
-    if (m_systemDev.myBuffer_in)
-        disconnect(m_systemDev.myBuffer_in, &QIODevice::readyRead,
-                   this, &Audio_Mixer::slot_readMore);
-    if (m_micDev.myBuffer_in)
-        disconnect(m_micDev.myBuffer_in, &QIODevice::readyRead,
-                   this, &Audio_Mixer::slot_readMore);
+    if (timer)
+        timer->stop();
 
     if (m_playState == state_play) {
         m_playState = state_pause;
@@ -363,12 +333,8 @@ void Audio_Mixer::slot_closeAudio()
 
 void Audio_Mixer::UnInit()
 {
-    if (m_systemDev.myBuffer_in)
-        disconnect(m_systemDev.myBuffer_in, &QIODevice::readyRead,
-                   this, &Audio_Mixer::slot_readMore);
-    if (m_micDev.myBuffer_in)
-        disconnect(m_micDev.myBuffer_in, &QIODevice::readyRead,
-                   this, &Audio_Mixer::slot_readMore);
+    if (timer)
+        timer->stop();
 
     if (m_systemDev.audio_in)
         m_systemDev.audio_in->stop();
