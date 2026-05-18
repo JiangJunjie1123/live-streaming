@@ -82,3 +82,13 @@ RecorderDialog (main UI, QDialog)
 - Video bitrate: 5 Mbps, H.264 codec with `superfast` preset and `zerolatency` tune.
 - Audio: 44100 Hz stereo, AAC codec, 64 kbps, 1024-sample frame size.
 - Queue caps: 30 video frames, 50 audio frames (≈1 second each).
+
+## 音频测试说明
+
+**Audio_Mixer** 通过 QTimer PreciseTimer 同步轮询两个 QAudioInput 设备（立体声混音 + 麦克风），在 S16 域混合（sys×0.8 + mic×1.0）后经由 swr_convert 转为 FLTP 格式送入 AAC 编码器。
+
+录制器界面有「系统音频」复选框：
+
+- **推流给观众（播放器在别的机器）**：勾选「系统音频」，立体声混音正常捕获系统音频，观众能听到系统声音 + 麦克风。
+- **本机测试（推流端 + 观众端同机）**：**必须关闭「系统音频」**，否则立体声混音会捕获播放器输出，形成音频闭环反馈（声音无限循环、越来越尖锐）。同机测试只用麦克风。
+- **录制本地文件**：勾选「系统音频」可录制系统音频 + 麦克风，不涉及网络播放，无闭环问题。
