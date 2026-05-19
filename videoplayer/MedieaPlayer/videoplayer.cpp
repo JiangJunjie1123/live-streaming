@@ -8,6 +8,13 @@
 
 //AVFrame wanted_frame;
 //PacketQueue audio_queue;
+
+// FFmpeg 中断回调——允许 stop() 中止阻塞的网络操作
+static int decode_interrupt_cb(void *ctx)
+{
+    VideoState *is = (VideoState *)ctx;
+    return is ? is->quit : 0;
+}
 //int quit = 0;
 
 //回调函数
@@ -472,6 +479,8 @@ void VideoPlayer::run()
     //以理解为视频文件指针
     qDebug() << "Allocating format context...";
     pFormatCtx = avformat_alloc_context();
+    pFormatCtx->interrupt_callback.callback = decode_interrupt_cb;
+    pFormatCtx->interrupt_callback.opaque = &m_videoState;
     qDebug() << "Format context allocated";
     
     //设置网络超时参数，仅对网络流生效，本地文件不需要
