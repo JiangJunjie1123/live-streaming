@@ -129,12 +129,13 @@ PlayerDialog::PlayerDialog(QWidget *parent)
     m_userName.clear();
     m_userTel.clear();
 
-    // 弹幕浮层 - 叠在视频窗口上方
-    m_danmakuOverlay = new DanmakuOverlay(ui->wdg_show);
-    m_danmakuOverlay->setGeometry(ui->wdg_show->rect());
+    // 弹幕浮层 - 作为 PlayerDialog 子控件（而非 OpenGL widget 子控件），
+    // 因为 QOpenGLWidget 直接写 framebuffer，会覆盖其子 widget
+    m_danmakuOverlay = new DanmakuOverlay(this);
+    QPoint videoPos = ui->wdg_show->mapTo(this, QPoint(0, 0));
+    m_danmakuOverlay->setGeometry(QRect(videoPos, ui->wdg_show->size()));
+    m_danmakuOverlay->raise();
     m_danmakuOverlay->show();
-    // 跟踪视频窗口大小变化
-    ui->wdg_show->installEventFilter(this);
 
     // 弹幕输入框 - 放在底部控制栏
     m_danmakuInput = new QLineEdit(ui->wdg_bottom);
@@ -498,6 +499,17 @@ void PlayerDialog::keyPressEvent(QKeyEvent *event)
     }
 }
 
+//窗口大小改变 → 同步弹幕浮层位置
+void PlayerDialog::resizeEvent(QResizeEvent *event)
+{
+    QDialog::resizeEvent(event);
+    if (m_danmakuOverlay) {
+        QPoint videoPos = ui->wdg_show->mapTo(this, QPoint(0, 0));
+        m_danmakuOverlay->setGeometry(QRect(videoPos, ui->wdg_show->size()));
+        m_danmakuOverlay->raise();
+    }
+}
+
 //窗口状态改变 — 最大化按钮 → 全屏
 void PlayerDialog::changeEvent(QEvent *event)
 {
@@ -563,10 +575,6 @@ bool PlayerDialog::eventFilter(QObject *obj, QEvent *event)
         else{
             return false;
         }
-    } else if (obj == ui->wdg_show && event->type() == QEvent::Resize) {
-        // 视频窗口大小变化时同步弹幕浮层尺寸
-        m_danmakuOverlay->setGeometry(ui->wdg_show->rect());
-        return false;
     } else {
         //pass the event on to the parent class
         return QDialog::eventFilter(obj,event);
@@ -746,9 +754,8 @@ void PlayerDialog::on_pb_fullscreen_clicked()
         ui->wdg_controls->hide();
         m_danmakuInput->hide();
         m_isFullscreen = true;
-        // 确保弹幕浮层仍在顶层且自适应全屏尺寸
-        m_danmakuOverlay->raise();
     }
+    // 全屏切换会触发 resizeEvent，其中已同步弹幕浮层位置
 }
 
 void PlayerDialog::slot_disconnected()

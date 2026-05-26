@@ -71,6 +71,8 @@ private slots:
 protected:
     //键盘事件
     void keyPressEvent(QKeyEvent *event) override;
+    //窗口大小改变 → 同步弹幕浮层
+    void resizeEvent(QResizeEvent *event) override;
     //窗口状态改变（最大化按钮 → 全屏）
     void changeEvent(QEvent *event) override;
 
