@@ -13,6 +13,7 @@ void CLogic::setNetPackMap()
     NetPackMap(_DEF_PACK_JOIN_ROOM_RQ)   = &CLogic::JoinRoomRq;
     NetPackMap(_DEF_PACK_LEAVE_ROOM_RQ)  = &CLogic::LeaveRoomRq;
     NetPackMap(_DEF_PACK_HEARTBEAT_RQ)   = &CLogic::HeartbeatRq;
+    NetPackMap(_DEF_PACK_DANMAKU_SEND_RQ) = &CLogic::DanmakuSendRq;
 }
 
 #define _DEF_COUT_FUNC_    cout << "clientfd:" << clientfd << " " << __func__ << endl;
@@ -258,6 +259,27 @@ void CLogic::JoinRoomRq(sock_fd clientfd, char* szbuf, int nlen)
     sprintf(sqlBuf, "UPDATE t_RoomInfo SET viewer_count = viewer_count + 1 WHERE id=%d;",
             rq->room_id);
     m_sql->UpdataMysql(sqlBuf);
+
+    // 从旧房间移除（如果切换房间）
+    int oldRoom;
+    if (m_mapFdToRoom.find(clientfd, oldRoom)) {
+        std::set<int> oldFds;
+        if (m_mapRoomMembers.find(oldRoom, oldFds)) {
+            oldFds.erase(clientfd);
+            if (oldFds.empty())
+                m_mapRoomMembers.erase(oldRoom);
+            else
+                m_mapRoomMembers.insert(oldRoom, oldFds);
+        }
+    }
+
+    // 加入新房间
+    std::set<int> fds;
+    m_mapRoomMembers.find(rq->room_id, fds);  // 忽略返回值，空 set 也可以
+    fds.insert(clientfd);
+    m_mapRoomMembers.insert(rq->room_id, fds);
+    m_mapFdToRoom.insert(clientfd, rq->room_id);
+
     printf("User %d joined room %d\n", rq->userid, rq->room_id);
 }
 
@@ -269,6 +291,18 @@ void CLogic::LeaveRoomRq(sock_fd clientfd, char* szbuf, int nlen)
     sprintf(sqlBuf, "UPDATE t_RoomInfo SET viewer_count = GREATEST(viewer_count - 1, 0) WHERE id=%d;",
             rq->room_id);
     m_sql->UpdataMysql(sqlBuf);
+
+    // 从房间成员表移除
+    std::set<int> fds;
+    if (m_mapRoomMembers.find(rq->room_id, fds)) {
+        fds.erase(clientfd);
+        if (fds.empty())
+            m_mapRoomMembers.erase(rq->room_id);
+        else
+            m_mapRoomMembers.insert(rq->room_id, fds);
+    }
+    m_mapFdToRoom.erase(clientfd);
+
     printf("User %d left room %d\n", rq->userid, rq->room_id);
 }
 
@@ -281,6 +315,42 @@ void CLogic::HeartbeatRq(sock_fd clientfd, char* szbuf, int nlen)
     STRU_HEARTBEAT_RS rs;
     rs.server_time = (int)time(NULL);
     m_tcp->SendData(clientfd, (char*)&rs, sizeof(rs));
+}
+
+// ===================== 弹幕发送 & 房间内广播 =====================
+void CLogic::DanmakuSendRq(sock_fd clientfd, char* szbuf, int nlen)
+{
+    STRU_DANMAKU_SEND_RQ* rq = (STRU_DANMAKU_SEND_RQ*)szbuf;
+
+    // 查用户名
+    char sqlBuf[_DEF_SQLIEN] = "";
+    sprintf(sqlBuf, "SELECT name FROM t_UserData WHERE id=%d;", rq->userid);
+    list<string> resList;
+    string username;
+    if (m_sql->SelectMysql(sqlBuf, 1, resList) && resList.size() > 0) {
+        username = resList.front();
+    } else {
+        username = "user" + to_string(rq->userid);
+    }
+
+    // 构造广播包
+    STRU_DANMAKU_BROADCAST bc;
+    bc.userid = rq->userid;
+    strncpy(bc.username, username.c_str(), sizeof(bc.username) - 1);
+    bc.username[sizeof(bc.username) - 1] = '\0';
+    strncpy(bc.text, rq->text, sizeof(bc.text) - 1);
+    bc.text[sizeof(bc.text) - 1] = '\0';
+
+    // 向房间内所有 fd 广播
+    std::set<int> fds;
+    if (m_mapRoomMembers.find(rq->room_id, fds)) {
+        for (std::set<int>::iterator it = fds.begin(); it != fds.end(); ++it) {
+            m_tcp->SendData(*it, (char*)&bc, sizeof(bc));
+        }
+    }
+
+    printf("Danmaku: room=%d user=%d name=%s text=%s (broadcast to %zu clients)\n",
+           rq->room_id, rq->userid, username.c_str(), rq->text, fds.size());
 }
 
 // ===================== 心跳超时清理线程 =====================
@@ -313,6 +383,19 @@ void* CLogic::HeartbeatCheckThread(void* arg)
 
                 int fd;
                 if (pThis->m_mapIDToUserFD.find(userId, fd)) {
+                    // 清理房间成员表
+                    int roomId;
+                    if (pThis->m_mapFdToRoom.find(fd, roomId)) {
+                        std::set<int> fds;
+                        if (pThis->m_mapRoomMembers.find(roomId, fds)) {
+                            fds.erase(fd);
+                            if (fds.empty())
+                                pThis->m_mapRoomMembers.erase(roomId);
+                            else
+                                pThis->m_mapRoomMembers.insert(roomId, fds);
+                        }
+                        pThis->m_mapFdToRoom.erase(fd);
+                    }
                     close(fd);
                 }
                 pThis->m_mapIDToUserFD.erase(userId);

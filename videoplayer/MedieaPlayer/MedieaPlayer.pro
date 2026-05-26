@@ -16,13 +16,15 @@ SOURCES += \
     playerdialog.cpp \
     videoplayer.cpp \
     PacketQueue.cpp \
-    cuda_helper.cpp
+    cuda_helper.cpp \
+    danmaku_overlay.cpp
 
 HEADERS += \
     playerdialog.h \
     videoplayer.h \
     PacketQueue.h \
-    cuda_helper.h
+    cuda_helper.h \
+    danmaku_overlay.h
 
 FORMS += \
     playerdialog.ui

@@ -12,6 +12,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QMessageBox>
+#include <QLineEdit>
+#include "danmaku_overlay.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class PlayerDialog; }
@@ -92,6 +94,10 @@ private:
     int m_userId;
     int m_currentRoomId;
     QTimer* m_heartbeatTimer;
+
+    // 弹幕相关
+    DanmakuOverlay* m_danmakuOverlay;
+    QLineEdit* m_danmakuInput;
 
     QString m_userName;
     QString m_userTel;

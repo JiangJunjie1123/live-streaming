@@ -4,6 +4,7 @@
 #include "TCPKernel.h"
 #include "packdef.h"
 #include <string>
+#include <set>
 #include <time.h>
 
 using namespace std;
@@ -44,6 +45,7 @@ public:
     void JoinRoomRq(sock_fd clientfd, char* szbuf, int nlen);
     void LeaveRoomRq(sock_fd clientfd, char* szbuf, int nlen);
     void HeartbeatRq(sock_fd clientfd, char* szbuf, int nlen);
+    void DanmakuSendRq(sock_fd clientfd, char* szbuf, int nlen);
 
     // ---- 心跳超时清理 ----
     static void* HeartbeatCheckThread(void* arg);
@@ -70,6 +72,11 @@ private:
 
     // 用户ID → 最后心跳时间（线程安全 MyMap）
     MyMap<int, time_t> m_mapHeartbeat;
+
+    // 房间成员: room_id → set<client_fd> (用于弹幕广播)
+    MyMap<int, std::set<int>> m_mapRoomMembers;
+    // fd → room_id (用于离开/断线时快速定位房间)
+    MyMap<int, int> m_mapFdToRoom;
 
     // 心跳线程控制
     bool m_isStopHeartbeat;

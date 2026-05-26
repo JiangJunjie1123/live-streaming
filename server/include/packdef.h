@@ -72,6 +72,9 @@
 #define _DEF_PACK_HEARTBEAT_RS      (_DEF_PACK_BASE + 13)
 // Token 验证
 #define _DEF_PACK_AUTH_TOKEN_RQ     (_DEF_PACK_BASE + 14)
+// 弹幕
+#define _DEF_PACK_DANMAKU_SEND_RQ   (_DEF_PACK_BASE + 15)
+#define _DEF_PACK_DANMAKU_BROADCAST (_DEF_PACK_BASE + 16)
 
 // ===================== 返回结果常量 =====================
 #define user_is_exist       (0)
@@ -216,6 +219,28 @@ struct STRU_HEARTBEAT_RS {
     STRU_HEARTBEAT_RS() : type(_DEF_PACK_HEARTBEAT_RS), server_time(0) {}
     PackType type;
     int server_time;
+};
+
+// --- 弹幕 ---
+struct STRU_DANMAKU_SEND_RQ {
+    STRU_DANMAKU_SEND_RQ() : type(_DEF_PACK_DANMAKU_SEND_RQ), userid(0), room_id(0) {
+        memset(text, 0, sizeof(text));
+    }
+    PackType type;
+    int userid;
+    int room_id;
+    char text[256];
+};
+
+struct STRU_DANMAKU_BROADCAST {
+    STRU_DANMAKU_BROADCAST() : type(_DEF_PACK_DANMAKU_BROADCAST), userid(0) {
+        memset(username, 0, sizeof(username));
+        memset(text, 0, sizeof(text));
+    }
+    PackType type;
+    int userid;
+    char username[64];
+    char text[256];
 };
 
 #pragma pack(pop)

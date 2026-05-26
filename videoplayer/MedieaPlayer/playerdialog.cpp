@@ -129,6 +129,35 @@ PlayerDialog::PlayerDialog(QWidget *parent)
     m_userName.clear();
     m_userTel.clear();
 
+    // 弹幕浮层 - 叠在视频窗口上方
+    m_danmakuOverlay = new DanmakuOverlay(ui->wdg_show);
+    m_danmakuOverlay->setGeometry(ui->wdg_show->rect());
+    m_danmakuOverlay->show();
+    // 跟踪视频窗口大小变化
+    ui->wdg_show->installEventFilter(this);
+
+    // 弹幕输入框 - 放在底部控制栏
+    m_danmakuInput = new QLineEdit(ui->wdg_bottom);
+    m_danmakuInput->setPlaceholderText(QString::fromUtf8("发个弹幕..."));
+    m_danmakuInput->setMaximumWidth(180);
+    m_danmakuInput->setMinimumHeight(28);
+    m_danmakuInput->setFont(QFont("Microsoft YaHei", 9));
+    m_danmakuInput->setStyleSheet("QLineEdit { border: 1px solid #D1D1D6; border-radius: 4px; padding: 2px 8px; background: #FFFFFF; color: #1D1D1F; } QLineEdit:focus { border-color: #007AFF; }");
+    m_danmakuInput->setFocusPolicy(Qt::ClickFocus);
+    connect(m_danmakuInput, &QLineEdit::returnPressed, [this]() {
+        QString text = m_danmakuInput->text().trimmed();
+        m_danmakuInput->clear();
+        if (text.isEmpty() || m_currentRoomId == 0 || !m_mediator) return;
+
+        STRU_DANMAKU_SEND_RQ rq;
+        rq.userid = m_userId;
+        rq.room_id = m_currentRoomId;
+        QByteArray utf8 = text.toUtf8();
+        strncpy(rq.text, utf8.constData(), sizeof(rq.text) - 1);
+        rq.text[sizeof(rq.text) - 1] = '\0';
+        m_mediator->SendData(0, (char*)&rq, sizeof(rq));
+    });
+
     // 用户信息标签
     QLabel* lbUser = new QLabel(this);
     lbUser->setObjectName("lb_user");
@@ -136,6 +165,7 @@ PlayerDialog::PlayerDialog(QWidget *parent)
     lbUser->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     QHBoxLayout* bottomLayout = qobject_cast<QHBoxLayout*>(ui->wdg_bottom->layout());
     if (bottomLayout) {
+        bottomLayout->insertWidget(0, m_danmakuInput);
         bottomLayout->addWidget(lbUser);
     }
 }
@@ -533,7 +563,11 @@ bool PlayerDialog::eventFilter(QObject *obj, QEvent *event)
         else{
             return false;
         }
-    }else{
+    } else if (obj == ui->wdg_show && event->type() == QEvent::Resize) {
+        // 视频窗口大小变化时同步弹幕浮层尺寸
+        m_danmakuOverlay->setGeometry(ui->wdg_show->rect());
+        return false;
+    } else {
         //pass the event on to the parent class
         return QDialog::eventFilter(obj,event);
     }
@@ -587,6 +621,12 @@ void PlayerDialog::slot_readyData(unsigned int ip, const QByteArray& data)
         QJsonArray arr = doc.array();
 
         showRoomListDialog(arr);  // 调用弹窗展示列表
+    }
+    else if (type == _DEF_PACK_DANMAKU_BROADCAST) {
+        const STRU_DANMAKU_BROADCAST* bc = (const STRU_DANMAKU_BROADCAST*)data.constData();
+        m_danmakuOverlay->addDanmaku(
+            QString::fromUtf8(bc->username),
+            QString::fromUtf8(bc->text));
     }
 }
 
@@ -698,12 +738,16 @@ void PlayerDialog::on_pb_fullscreen_clicked()
         // 退出全屏
         this->showNormal();
         ui->wdg_controls->show();
+        m_danmakuInput->show();
         m_isFullscreen = false;
     } else {
         // 进入全屏
         this->showFullScreen();
         ui->wdg_controls->hide();
+        m_danmakuInput->hide();
         m_isFullscreen = true;
+        // 确保弹幕浮层仍在顶层且自适应全屏尺寸
+        m_danmakuOverlay->raise();
     }
 }
 
