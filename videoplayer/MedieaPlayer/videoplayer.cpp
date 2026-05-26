@@ -401,8 +401,8 @@ PlayerState VideoPlayer::playerState() const
     return m_playerState;
 }
 
-#define MAX_AUDIO_SIZE (1024*16*25*2) // 音频阈值 (~800KB，约1秒缓冲)
-#define MAX_VIDEO_SIZE (1024*128*25*2) // 视频阈值 (~6.4MB，约1秒缓冲@25fps)
+#define MAX_AUDIO_SIZE (1024*64*25*2) // 音频阈值 (~3.2MB，约4秒缓冲)
+#define MAX_VIDEO_SIZE (1024*512*25*2) // 视频阈值 (~25.6MB，约4秒缓冲@25fps)
 // 当队列里面的数据超过某个大小的时候 就暂停读取 防止一下子就把视频读完了，导致的空间分配不足
 void VideoPlayer::run()
 {
@@ -497,6 +497,9 @@ void VideoPlayer::run()
         // HLS seek 支持
         av_dict_set(&opts, "seekable", "1", 0);
         av_dict_set(&opts, "enable_dash", "0", 0);
+        // 断线自动重连：HLS分片下载失败时FFmpeg内部重试，不抛错到外层
+        av_dict_set(&opts, "reconnect", "1", 0);
+        av_dict_set(&opts, "reconnect_streamed", "1", 0);
 
         // Adjust settings for RTMP live streams (not VOD)
         if (m_fileName.contains("rtmp://") && !m_fileName.contains("/vod/")) {
@@ -519,6 +522,7 @@ void VideoPlayer::run()
         std::cerr << "ERROR: can't open file: " << file_path << std::endl;
         qDebug()<<"can't open file";
         av_dict_free(&opts);
+        pFormatCtx = nullptr; // FFmpeg 4.2.2 失败时内部释放但不置NULL，防止 error_cleanup 二次释放崩溃
         goto error_cleanup;
     }
     av_dict_free(&opts);
