@@ -1,46 +1,29 @@
 #include "danmaku_overlay.h"
 #include <QPainter>
+#include <QPainterPath>
 #include <QFontMetrics>
 
 const QColor DanmakuOverlay::s_colors[] = {
-    QColor(255, 255, 255), // white
-    QColor(255, 100, 100), // red
-    QColor(100, 255, 100), // green
-    QColor(100, 180, 255), // blue
-    QColor(255, 255, 100), // yellow
-    QColor(255, 180, 100), // orange
-    QColor(200, 150, 255), // purple
-    QColor(100, 255, 255), // cyan
+    QColor(255, 255, 255),
+    QColor(255, 100, 100),
+    QColor(100, 255, 100),
+    QColor(100, 180, 255),
+    QColor(255, 255, 100),
+    QColor(255, 180, 100),
+    QColor(200, 150, 255),
+    QColor(100, 255, 255),
 };
 const int DanmakuOverlay::s_colorCount = sizeof(s_colors) / sizeof(s_colors[0]);
 
-DanmakuOverlay::DanmakuOverlay(QWidget* parent)
-    : QWidget(parent)
+DanmakuOverlay::DanmakuOverlay(QObject* parent)
+    : QObject(parent)
 {
-    setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    setAttribute(Qt::WA_NoSystemBackground, true);
-    setAttribute(Qt::WA_TranslucentBackground, true);
-    setAttribute(Qt::WA_DeleteOnClose, false);
-
-    m_rowOccupied.resize(20); // up to 20 rows, will grow dynamically in resizeEvent
+    m_rowOccupied.resize(20);
 
     m_timer = new QTimer(this);
     m_timer->setTimerType(Qt::PreciseTimer);
-    connect(m_timer, &QTimer::timeout, this, [this]() {
-        update();
-    });
-    m_timer->start(16); // ~60fps
-}
-
-void DanmakuOverlay::resizeEvent(QResizeEvent* event)
-{
-    QWidget::resizeEvent(event);
-    int maxRows = (height() / m_rowHeight) + 1;
-    if (maxRows < 1) maxRows = 1;
-    m_rowOccupied.resize(maxRows);
-    for (int i = 0; i < m_rowOccupied.size(); i++) {
-        m_rowOccupied[i] = 0;
-    }
+    connect(m_timer, &QTimer::timeout, this, &DanmakuOverlay::repaintNeeded);
+    m_timer->start(16);
 }
 
 void DanmakuOverlay::addDanmaku(const QString& username, const QString& text)
@@ -50,17 +33,19 @@ void DanmakuOverlay::addDanmaku(const QString& username, const QString& text)
     QFontMetrics fm(font);
     double textWidth = fm.horizontalAdvance(fullText);
 
-    int row = allocateRow(width(), textWidth);
-    if (row < 0) return; // all rows busy, drop
+    // use last known width from render(), or a sensible default
+    int screenW = m_rowOccupied.size() > 0 ? 800 : 800;
+    int row = allocateRow(screenW, textWidth);
+    if (row < 0) return;
 
     DanmakuItem item;
     item.text = fullText;
-    item.x = width();
+    item.x = screenW;
     item.y = row * m_rowHeight;
     item.color = s_colors[qHash(username) % s_colorCount];
 
     m_items.append(item);
-    m_rowOccupied[row] = width() + textWidth;
+    m_rowOccupied[row] = screenW + textWidth;
 }
 
 int DanmakuOverlay::allocateRow(double screenWidth, double textWidth)
@@ -73,42 +58,46 @@ int DanmakuOverlay::allocateRow(double screenWidth, double textWidth)
     return -1;
 }
 
-void DanmakuOverlay::paintEvent(QPaintEvent*)
+void DanmakuOverlay::render(QPainter* painter, int width, int height)
 {
+    // update row count based on current widget height
+    int maxRows = (height / m_rowHeight) + 1;
+    if (maxRows < 1) maxRows = 1;
+    if (maxRows != m_rowOccupied.size()) {
+        m_rowOccupied.resize(maxRows);
+        for (int i = 0; i < m_rowOccupied.size(); i++)
+            m_rowOccupied[i] = 0;
+    }
+
     if (m_items.isEmpty()) return;
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing, true);
 
     QFont font("Microsoft YaHei", 14, QFont::Bold);
     QFontMetrics fm(font);
-    painter.setFont(font);
+    painter->setFont(font);
 
-    double dt = 0.016; // ~60fps
+    double dt = 0.016;
     QList<DanmakuItem> remaining;
 
-    // reset row occupancy, will recalculate
-    for (int i = 0; i < m_rowOccupied.size(); i++) {
+    for (int i = 0; i < m_rowOccupied.size(); i++)
         m_rowOccupied[i] = 0;
-    }
 
     for (auto& item : m_items) {
         item.x -= m_speed * dt;
 
-        // draw text with outline for readability over any background
         QPainterPath path;
         path.addText(item.x, item.y + m_rowHeight - fm.descent(), font, item.text);
 
-        // outline
         QPen outlinePen(QColor(0, 0, 0, 180), 3);
-        painter.setPen(outlinePen);
-        painter.setBrush(Qt::NoBrush);
-        painter.drawPath(path);
+        painter->setPen(outlinePen);
+        painter->setBrush(Qt::NoBrush);
+        painter->drawPath(path);
 
-        // fill
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(item.color);
-        painter.drawPath(path);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(item.color);
+        painter->drawPath(path);
 
         double w = fm.horizontalAdvance(item.text);
         if (item.x + w > 0) {
@@ -123,4 +112,5 @@ void DanmakuOverlay::paintEvent(QPaintEvent*)
     }
 
     m_items = remaining;
+    painter->restore();
 }

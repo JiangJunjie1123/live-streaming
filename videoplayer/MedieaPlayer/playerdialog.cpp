@@ -1,5 +1,6 @@
 #include "playerdialog.h"
 #include "ui_playerdialog.h"
+#include "danmaku_overlay.h"
 #include<QDebug>
 #include<QThread>
 #include<QMenu>
@@ -129,13 +130,10 @@ PlayerDialog::PlayerDialog(QWidget *parent)
     m_userName.clear();
     m_userTel.clear();
 
-    // 弹幕浮层 - 作为 PlayerDialog 子控件（而非 OpenGL widget 子控件），
-    // 因为 QOpenGLWidget 直接写 framebuffer，会覆盖其子 widget
+    // 弹幕管理器 - 渲染在 OpenGL widget 的 paintGL() 中完成
     m_danmakuOverlay = new DanmakuOverlay(this);
-    QPoint videoPos = ui->wdg_show->mapTo(this, QPoint(0, 0));
-    m_danmakuOverlay->setGeometry(QRect(videoPos, ui->wdg_show->size()));
-    m_danmakuOverlay->raise();
-    m_danmakuOverlay->show();
+    ui->wdg_show->setDanmakuOverlay(m_danmakuOverlay);
+    connect(m_danmakuOverlay, SIGNAL(repaintNeeded()), ui->wdg_show, SLOT(update()));
 
     // 弹幕输入框 - 放在底部控制栏
     m_danmakuInput = new QLineEdit(ui->wdg_bottom);
@@ -499,17 +497,6 @@ void PlayerDialog::keyPressEvent(QKeyEvent *event)
     }
 }
 
-//窗口大小改变 → 同步弹幕浮层位置
-void PlayerDialog::resizeEvent(QResizeEvent *event)
-{
-    QDialog::resizeEvent(event);
-    if (m_danmakuOverlay) {
-        QPoint videoPos = ui->wdg_show->mapTo(this, QPoint(0, 0));
-        m_danmakuOverlay->setGeometry(QRect(videoPos, ui->wdg_show->size()));
-        m_danmakuOverlay->raise();
-    }
-}
-
 //窗口状态改变 — 最大化按钮 → 全屏
 void PlayerDialog::changeEvent(QEvent *event)
 {
@@ -743,19 +730,16 @@ void PlayerDialog::slot_sendHeartbeat()
 void PlayerDialog::on_pb_fullscreen_clicked()
 {
     if (m_isFullscreen) {
-        // 退出全屏
         this->showNormal();
         ui->wdg_controls->show();
         m_danmakuInput->show();
         m_isFullscreen = false;
     } else {
-        // 进入全屏
         this->showFullScreen();
         ui->wdg_controls->hide();
         m_danmakuInput->hide();
         m_isFullscreen = true;
     }
-    // 全屏切换会触发 resizeEvent，其中已同步弹幕浮层位置
 }
 
 void PlayerDialog::slot_disconnected()

@@ -1,5 +1,7 @@
 #include "myopenglwidget.h"
-#include<QDebug>
+#include "danmaku_overlay.h"
+#include <QPainter>
+#include <QDebug>
 
 // 初始化 OpenGL
 void MyOpenGLWidget::initializeGL()
@@ -60,6 +62,12 @@ void MyOpenGLWidget::paintGL()
         glTexCoord2f(0, 0); glVertex2d( left , up );
         /// 结束定义图元
         glEnd();
+    }
+
+    // 弹幕浮层 — 用 QPainter 叠加在 OpenGL 帧之上
+    if (m_danmaku) {
+        QPainter painter(this);
+        m_danmaku->render(&painter, width(), height());
     }
 }
 

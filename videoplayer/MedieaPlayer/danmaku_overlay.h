@@ -1,24 +1,26 @@
 #ifndef DANMAKU_OVERLAY_H
 #define DANMAKU_OVERLAY_H
 
-#include <QWidget>
+#include <QObject>
 #include <QTimer>
 #include <QList>
 #include <QVector>
 #include <QColor>
 #include <QString>
 
-class DanmakuOverlay : public QWidget
+class QPainter;
+
+class DanmakuOverlay : public QObject
 {
     Q_OBJECT
 public:
-    explicit DanmakuOverlay(QWidget* parent = nullptr);
+    explicit DanmakuOverlay(QObject* parent = nullptr);
 
     void addDanmaku(const QString& username, const QString& text);
+    void render(QPainter* painter, int width, int height);
 
-protected:
-    void paintEvent(QPaintEvent*) override;
-    void resizeEvent(QResizeEvent*) override;
+signals:
+    void repaintNeeded();
 
 private:
     struct DanmakuItem {
@@ -28,14 +30,14 @@ private:
         QColor color;
     };
 
-    int allocateRow(double screenWidth, double textWidth);
+    int allocateRow(int screenWidth, double textWidth);
 
     QList<DanmakuItem> m_items;
     QTimer* m_timer;
-    int m_speed = 150;       // pixel per second
+    int m_speed = 150;
     int m_rowHeight = 28;
-    double m_minGap = 40;    // minimum gap between danmaku items on the same row
-    QVector<double> m_rowOccupied; // rightmost x occupied per row
+    double m_minGap = 40;
+    QVector<double> m_rowOccupied;
 
     static const QColor s_colors[];
     static const int s_colorCount;
