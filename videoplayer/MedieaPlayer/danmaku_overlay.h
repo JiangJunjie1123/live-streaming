@@ -30,7 +30,7 @@ private:
         QColor color;
     };
 
-    int allocateRow(int screenWidth, double textWidth);
+    int allocateRow(double screenWidth, double textWidth);
 
     QList<DanmakuItem> m_items;
     QTimer* m_timer;
@@ -38,6 +38,7 @@ private:
     int m_rowHeight = 28;
     double m_minGap = 40;
     QVector<double> m_rowOccupied;
+    int m_lastWidth = 0;
 
     static const QColor s_colors[];
     static const int s_colorCount;

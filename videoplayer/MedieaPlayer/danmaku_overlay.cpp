@@ -34,7 +34,7 @@ void DanmakuOverlay::addDanmaku(const QString& username, const QString& text)
     double textWidth = fm.horizontalAdvance(fullText);
 
     // use last known width from render(), or a sensible default
-    int screenW = m_rowOccupied.size() > 0 ? 800 : 800;
+    int screenW = m_lastWidth > 0 ? m_lastWidth : 800;
     int row = allocateRow(screenW, textWidth);
     if (row < 0) return;
 
@@ -60,6 +60,8 @@ int DanmakuOverlay::allocateRow(double screenWidth, double textWidth)
 
 void DanmakuOverlay::render(QPainter* painter, int width, int height)
 {
+    m_lastWidth = width;
+
     // update row count based on current widget height
     int maxRows = (height / m_rowHeight) + 1;
     if (maxRows < 1) maxRows = 1;
